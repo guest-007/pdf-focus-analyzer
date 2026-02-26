@@ -1,0 +1,11 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+out/
+.claude/
+*.pdf
+.DS_Store
+*.egg-info/
+helper/
+input/focus.md
