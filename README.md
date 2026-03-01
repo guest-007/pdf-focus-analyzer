@@ -2,9 +2,23 @@
 
 > **Analyze any PDF through a custom lens.** Define what you care about, and get a structured, evidence-backed report — powered by LLMs.
 
+This is a **learning project** where I evaluate how far I can push **Qwen 3.5-35B** (and compare it with OpenAI models) for focused PDF analysis.
+
+Instead of a generic "chat with PDF" flow, this repo aims for a reproducible pipeline:
+**extract → chunk → retrieve → map claims/evidence → reduce summary → challenge pass**.
+
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-66%20passed-brightgreen.svg)](#-tests)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+
+---
+
+## 🧪 Project Status
+
+- **Status:** Active learning experiment
+- **Current focus:** Evaluate Qwen 3.5-35B quality, instruction following, and latency
+- **Constraint:** 4096-token context experiments for local models
+- **Output style:** Structured, evidence-traceable analysis (not free-form chat)
 
 ---
 
