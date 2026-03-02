@@ -16,6 +16,7 @@ Rules:
 - evidence_quote must be copied verbatim from the chunk.
 - evidence_strength: "weak", "medium", or "strong".
 - Do NOT fabricate quotes or pages.
+- Respond in the same language as the chunk text.
 """
 
 

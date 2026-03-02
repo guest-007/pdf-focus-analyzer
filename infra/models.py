@@ -124,14 +124,3 @@ class FinalSummary(BaseModel):
     contradictions: List[str]
     gaps: List[str]
     confidence: ConfidenceScore
-
-
-# --- Stage 7: Quality Check ---
-
-
-class ChallengeResult(BaseModel):
-    chunks_sampled: int
-    contradictions_found: bool
-    material_updates: List[str]
-    revised_evidence: List[EvidenceItem]
-    audit_note: str

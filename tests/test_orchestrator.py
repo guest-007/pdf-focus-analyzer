@@ -10,7 +10,6 @@ from infra.models import (
     SubthemeSynthesis,
     EvidenceItem,
     ConfidenceScore,
-    ChallengeResult,
 )
 from pipeline.orchestrator import save_json, render_markdown
 

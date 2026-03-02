@@ -30,6 +30,7 @@ Rules:
 - subtheme_hits: which subthemes had evidence in this batch.
 - Note any contradictions or gaps.
 - Do NOT fabricate evidence.
+- Respond in the same language as the source evidence.
 """
 
 FINAL_REDUCE_PROMPT = """\
@@ -47,6 +48,7 @@ Rules:
 - gaps: what the report does NOT address relative to the focus.
 - confidence.score: 0.0 (no evidence) to 1.0 (comprehensive). Explain reasoning.
 - Do NOT fabricate evidence.
+- Respond in the same language as the source evidence.
 """
 
 

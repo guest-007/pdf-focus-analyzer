@@ -17,7 +17,6 @@ from infra.models import (
     EvidenceItem,
     ConfidenceScore,
     FinalSummary,
-    ChallengeResult,
 )
 
 
@@ -143,13 +142,3 @@ class TestFinalSummary:
         assert s.confidence.score == 0.8
 
 
-class TestChallengeResult:
-    def test_no_contradictions(self):
-        cr = ChallengeResult(
-            chunks_sampled=5,
-            contradictions_found=False,
-            material_updates=[],
-            revised_evidence=[],
-            audit_note="All clear",
-        )
-        assert cr.contradictions_found is False

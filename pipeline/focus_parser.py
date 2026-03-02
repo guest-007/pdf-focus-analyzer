@@ -18,6 +18,7 @@ Rules:
 - exclusion_criteria: what to skip (e.g., boilerplate disclaimers, table of contents).
 - Fill in ALL fields with real values.
 - Do NOT fabricate anything. This is a planning step only.
+- Respond in the same language as the user's focus prompt.
 """
 
 

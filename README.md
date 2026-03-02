@@ -1,46 +1,48 @@
-# 🔍 PDF Focus Analyzer
+# PDF Focus Analyzer
 
-> **Analyze any PDF through a custom lens.** Define what you care about, and get a structured, evidence-backed report — powered by LLMs.
+A map-reduce pipeline that analyzes PDFs through a user-defined lens. Give it a PDF and a focus prompt — it extracts, chunks, retrieves, maps claims with evidence, and reduces everything into a structured report.
 
-This is a **learning project** where I evaluate how far I can push **Qwen 3.5-35B** (and compare it with OpenAI models) for focused PDF analysis.
+Requires **OpenAI API** or **LM Studio** (local models via OpenAI-compatible API).
 
-Instead of a generic "chat with PDF" flow, this repo aims for a reproducible pipeline:
-**extract → chunk → retrieve → map claims/evidence → reduce summary → challenge pass**.
+This is a **learning project** exploring how far **Qwen 3.5-35B** can go for focused document analysis, compared to OpenAI models.
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-66%20passed-brightgreen.svg)](#-tests)
+[![Tests](https://img.shields.io/badge/tests-65%20passed-brightgreen.svg)](#tests)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 🧪 Project Status
+## What It Does
 
-- **Status:** Active learning experiment
-- **Current focus:** Evaluate Qwen 3.5-35B quality, instruction following, and latency
-- **Constraint:** 4096-token context experiments for local models
-- **Output style:** Structured, evidence-traceable analysis (not free-form chat)
+You write a short focus prompt (e.g. "SWOT analysis of this company") and point it at a PDF. The pipeline produces a Markdown report containing:
 
----
+- **Summary** — a narrative overview, written in the language of your input
+- **Key findings** — numbered, prioritized insights
+- **Subtheme analysis** — the LLM breaks your focus into subthemes and analyzes each
+- **Evidence table** — every claim linked to a direct quote and page number(s)
+- **Contradictions and gaps** — where the document is inconsistent or silent
+- **Confidence score** — how well the source material covers the focus
 
-## ✨ What It Does
-
-Drop in a PDF and a **focus prompt** describing what you want to analyze. The pipeline will:
-
-1. 📄 **Extract** text from the PDF page by page
-2. ✂️ **Chunk** text into overlapping segments with token awareness
-3. 🔎 **Retrieve** the most relevant chunks using vector embeddings (FAISS)
-4. 🗺️ **Map** — extract structured claims and evidence from each chunk
-5. 🔗 **Reduce** — synthesize findings in a two-phase batch + merge process
-6. ⚖️ **Challenge** — spot-check overlooked chunks for missed evidence
-7. 📊 **Report** — produce a Markdown report with findings, evidence table, confidence score, and gaps
-
-All LLM outputs use **structured JSON output** (Pydantic models + OpenAI strict mode) for reliable parsing.
+All claims trace back to specific pages. The output language matches the input.
 
 ---
 
-## 🚀 Quick Start
+## Providers
 
-### 1. Install dependencies
+The pipeline uses the OpenAI client for both cloud and local models. You need one of:
+
+| Provider | Chat Model | Embedding | Setup |
+|----------|-----------|-----------|-------|
+| **OpenAI** | Any OpenAI model (default: gpt-4.1) | text-embedding-3-small | Set `OPENAI_API_KEY` in `.env` |
+| **LM Studio** | Any local model | nomic-embed-text-v1.5 | Run LM Studio with models loaded |
+
+Both providers use the same pipeline. Token budgets adapt automatically — 128K context for OpenAI, 4K for local models.
+
+To change models, edit [`infra/config.py`](infra/config.py).
+
+---
+
+## Quick Start
 
 ```bash
 python -m venv .venv
@@ -48,47 +50,26 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### 2. Set up your API key
-
-Create a `.env` file in the project root:
+For OpenAI, create a `.env` file:
 
 ```bash
 OPENAI_API_KEY=sk-...
 ```
 
-### 3. Add your PDF and focus
-
-Place your PDF in the `input/` folder, then create your focus file by copying the example:
+Place your PDF in `input/`, create your focus prompt:
 
 ```bash
 cp input/focus_example.md input/focus.md
+# edit focus.md with your analysis focus
 ```
 
-Edit `input/focus.md` with your own analysis focus:
-
-```markdown
-# Focus: Risk Culture
-
-Analyze the company's risk culture, covering:
-
-- Governance and oversight model
-- Leadership attitudes toward risk-taking
-- Communication and escalation practices
-```
-
-(See [`input/focus_example.md`](input/focus_example.md) for a full example.)
-
-### 4. Run it
+Run:
 
 ```bash
 python analyze_pdf.py
 ```
 
-That's it! The interactive CLI will ask you to:
-- **Pick a PDF** from `input/`
-- **Pick a provider** (OpenAI or LM Studio)
-
-Or pass everything explicitly:
+The CLI will ask you to pick a PDF and a provider. Or pass everything explicitly:
 
 ```bash
 python analyze_pdf.py --pdf input/report.pdf --focus input/focus.md --provider openai
@@ -96,132 +77,48 @@ python analyze_pdf.py --pdf input/report.pdf --focus input/focus.md --provider o
 
 ---
 
-## 📁 Project Structure
+## How It Works
 
-```
-pdf-focus-analyzer/
-├── analyze_pdf.py              # 🎯 CLI entry point
-├── input/
-│   └── focus_example.md        # Example focus prompt (copy to focus.md)
-├── pipeline/
-│   ├── pdf_extract.py          # Stage 2: PDF → pages
-│   ├── chunking.py             # Stage 3: Pages → overlapping chunks
-│   ├── retrieval.py            # Stage 4: FAISS vector search
-│   ├── focus_parser.py         # Stage 1: Focus prompt → structured spec
-│   ├── map_extract.py          # Stage 5: Chunk → claims extraction
-│   ├── reduce_summarize.py     # Stage 6: Two-phase reduce synthesis
-│   ├── quality_check.py        # Stage 7: Challenge pass
-│   └── orchestrator.py         # Full pipeline orchestration
-├── infra/
-│   ├── config.py               # ⚙️ Model & provider configuration
-│   ├── chat_factory.py         # LLM provider abstraction
-│   ├── models.py               # Pydantic data models
-│   ├── llm_json.py             # JSON response parsing
-│   └── tokens.py               # Token budget utilities
-├── tests/                      # 66 unit tests
-├── requirements.txt
-└── out/                        # Generated reports (gitignored)
-    ├── report_*.md             # 📊 Final reports
-    ├── final_result.json       # Structured result
-    └── intermediate/           # Stage-by-stage JSON artifacts
-```
+1. **Parse focus** — LLM interprets your prompt into a structured spec with subthemes, keywords, and retrieval queries
+2. **Extract + chunk** — PDF text is extracted page-by-page, then split into overlapping token-aware chunks
+3. **Embed + retrieve** — chunks are embedded (FAISS), multi-query retrieval selects the top-k most relevant
+4. **Map** — each retrieved chunk is analyzed: claims extracted with quotes, page refs, and evidence strength
+5. **Reduce** — two-phase synthesis (batch groups of 5, then merge) produces the final structured summary
+6. **Report** — Markdown report written to `out/`
+
+Key design choices:
+- **Structured JSON output** — all LLM calls enforce JSON schemas (Pydantic + OpenAI strict mode)
+- **Dynamic token budgets** — each stage computes available output tokens from context limit minus input size
+- **Two-phase reduce** — handles large documents without exceeding context limits
 
 ---
 
-## ⚙️ Configuration
-
-All model settings live in [`infra/config.py`](infra/config.py). Change models, context limits, or timeouts in one place:
-
-```python
-@dataclass(frozen=True)
-class AppConfig:
-    openai_chat: ChatModelConfig       # model_name, context_limit, max_output_tokens
-    lmstudio_chat: ChatModelConfig     # same, for local models
-    openai_embedding: EmbeddingModelConfig
-    lmstudio_embedding: EmbeddingModelConfig
-    openai: ProviderConfig             # base_url (None = SDK default)
-    lmstudio: ProviderConfig           # base_url for local server
-```
-
-### 🤖 Supported Providers
-
-| Provider | Default Chat Model | Embedding Model | Notes |
-|----------|-------------------|-----------------|-------|
-| **OpenAI** | gpt-4.1 (128K context) | text-embedding-3-small | Any OpenAI model works (gpt-4.1, o3, etc.) |
-| **LM Studio** | Any local model | nomic-embed-text-v1.5 | Requires LM Studio running locally |
-
-> **Any OpenAI chat model** that supports structured output can be used — just change the model name and context limit in the config. The pipeline dynamically adapts token budgets to the model's context window.
-
-To use a **different model**, just edit `infra/config.py`:
-
-```python
-openai_chat: ChatModelConfig = field(
-    default_factory=lambda: ChatModelConfig(
-        model_name="gpt-4.1-mini",      # ← change model here
-        context_limit=128_000,
-        max_output_tokens=32_768,
-    )
-)
-```
-
----
-
-## 🧪 Tests
-
-```bash
-python -m pytest tests/ -v
-```
-
-66 unit tests covering models, config, chunking, JSON parsing, orchestration, and CLI.
-
----
-
-## 🏗️ How the Pipeline Works
-
-```
-┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌───────────┐
-│  Focus .md  │───→│  Parse   │───→│ Retrieval│───→│  Extract  │
-│  + PDF      │    │  Prompt  │    │  Queries │    │  Pages    │
-└─────────────┘    └──────────┘    └──────────┘    └───────────┘
-                                                         │
-                   ┌──────────┐    ┌────────────┐  ┌─────▼─────┐
-                   │Challenge │◄───│   Reduce   │◄─│   Chunk   │
-                   │  Pass    │    │  (2-phase) │  │  + Embed  │
-                   └────┬─────┘    └────────────┘  └───────────┘
-                        │               ▲
-                        │          ┌────┴─────┐
-                        └─────────→│  Report  │
-                                   │  (.md)   │
-                                   └──────────┘
-```
-
-### 🔑 Key Design Decisions
-
-- **Dynamic token budgets** — Each pipeline stage computes how much output it can request based on the model's context limit minus the input size. Works seamlessly across 128K (OpenAI) and 4K (local models).
-- **Input truncation** — When input exceeds the context window, it's automatically truncated to fit, with minimum output budgets preserved.
-- **Two-phase reduce** — Map results are batched (5 per group), each batch synthesized, then merged into a final summary. This handles large documents without exceeding context limits.
-- **Structured output** — All LLM calls use JSON schema enforcement (OpenAI strict mode) with Pydantic models, making parsing reliable.
-- **Challenge pass** — A random sample of low-scoring chunks is re-examined to catch evidence the retrieval stage might have missed.
-
----
-
-## 📋 CLI Reference
+## CLI Reference
 
 ```
 usage: analyze_pdf.py [--pdf PDF] [--focus FOCUS] [--provider {openai,lmstudio}]
-                      [--top-k TOP_K] [--challenge-sample N] [--out DIR]
+                      [--top-k TOP_K] [--out DIR]
 
 Options:
   --pdf              Path to PDF (default: interactive picker from input/)
   --focus            Focus prompt or .md file (default: input/focus.md)
   --provider         openai or lmstudio (default: interactive picker)
   --top-k            Number of chunks to retrieve (default: 20)
-  --challenge-sample Challenge pass sample size (default: 5)
   --out              Output directory (default: out)
 ```
 
 ---
 
-## 📜 License
+## Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+65 unit tests covering models, config, chunking, JSON parsing, orchestration, and CLI.
+
+---
+
+## License
 
 [MIT](LICENSE)

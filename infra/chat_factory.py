@@ -98,15 +98,17 @@ class LMStudioChat(ChatModel):
     def __init__(
         self, chat_config: ChatModelConfig, provider_config: ProviderConfig
     ):
-        import requests
+        from openai import OpenAI
 
-        self.base_url = provider_config.base_url.rstrip("/")
+        self.client = OpenAI(
+            base_url=provider_config.base_url,
+            api_key="lm-studio",
+        )
         self.model_name = chat_config.model_name
         self.context_limit = chat_config.context_limit
         self.max_output_tokens = chat_config.max_output_tokens
         self.temperature = chat_config.temperature
         self.timeout = chat_config.timeout
-        self.requests = requests
 
     def generate(
         self,
@@ -114,25 +116,21 @@ class LMStudioChat(ChatModel):
         response_format: Optional[dict] = None,
         max_tokens: Optional[int] = None,
     ) -> str:
-        payload: dict = {
+        kwargs: dict = {
             "model": self.model_name,
-            "messages": messages,
+            "messages": cast(List["ChatCompletionMessageParam"], messages),
             "temperature": self.temperature,
-            "chat_template_kwargs": {"enable_thinking": False},
+            "extra_body": {
+                "chat_template_kwargs": {"enable_thinking": False},
+            },
         }
         if max_tokens is not None:
-            payload["max_tokens"] = max_tokens
+            kwargs["max_tokens"] = max_tokens
         if response_format is not None:
-            payload["response_format"] = response_format
-        response = self.requests.post(
-            f"{self.base_url}/chat/completions",
-            json=payload,
-            timeout=self.timeout,
-        )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"]
-
-        # Remove <think>...</think> blocks
+            kwargs["response_format"] = response_format
+        response = self.client.chat.completions.create(**kwargs)
+        content = response.choices[0].message.content or ""
+        # Strip <think>…</think> blocks (MLX models ignore enable_thinking flag)
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
         return content
 

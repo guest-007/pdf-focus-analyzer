@@ -97,12 +97,6 @@ Examples:
     parser.add_argument(
         "--top-k", type=int, default=20, help="Number of chunks to retrieve"
     )
-    parser.add_argument(
-        "--challenge-sample",
-        type=int,
-        default=5,
-        help="Challenge pass sample size",
-    )
     parser.add_argument("--out", default="out", help="Output directory")
 
     args = parser.parse_args()
@@ -127,7 +121,6 @@ Examples:
             focus_prompt=focus_prompt,
             provider=provider,
             top_k=args.top_k,
-            challenge_sample=args.challenge_sample,
             output_dir=args.out,
         )
 

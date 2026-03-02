@@ -7,7 +7,6 @@ from infra.models import (
     RetrievedChunk,
     ChunkFocusResult,
     FinalSummary,
-    ChallengeResult,
 )
 from infra.chat_factory import ChatFactory, ChatModel, EmbeddingModel
 from infra.llm_json import parse_json_response
@@ -19,7 +18,6 @@ __all__ = [
     "RetrievedChunk",
     "ChunkFocusResult",
     "FinalSummary",
-    "ChallengeResult",
     "ChatFactory",
     "ChatModel",
     "EmbeddingModel",
